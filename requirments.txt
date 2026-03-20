@@ -1,0 +1,7 @@
+torch
+torchvision
+torchaudio
+torch-geometric
+matplotlib
+numpy
+sionna
