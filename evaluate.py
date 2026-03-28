@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from sionna.phy.fec.ldpc.decoding import LDPCBPDecoder
 
 class Evaluator:
@@ -70,7 +71,10 @@ class Evaluator:
                     llrs, true_codewords, _, _ = self.env.generate_batch(batch_size, snr)
                     true_info_bits = true_codewords[:, :self.env.k]
                     
-                    bp_dec = self.baseline_decoder(llrs)[:, :self.env.k]
+                    # ---> THE FIX: Convert PyTorch LLRs to numpy for Sionna BP Decoder <---
+                    bp_dec_tf = self.baseline_decoder(llrs.numpy())
+                    bp_dec = torch.tensor(np.array(bp_dec_tf))[:, :self.env.k]
+                    
                     nbp_dec = (torch.sigmoid(self.baseline_neural_model(llrs, self.env.edge_index)[-1]) > 0.5).float()[:, :self.env.k]
                     gat_nc_dec = (torch.sigmoid(self.gat_no_cycle_model(llrs, self.env.edge_index, self.zero_mask)[-1]) > 0.5).float()[:, :self.env.k]
                     cagat_dec = (torch.sigmoid(self.model(llrs, self.env.edge_index, self.cycle_mask)[-1]) > 0.5).float()[:, :self.env.k]

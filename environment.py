@@ -3,9 +3,8 @@ import torch
 import numpy as np
 import sionna
 from sionna.phy.fec.ldpc import LDPC5GEncoder
-from sionna.phy.channel import AWGN
 from sionna.phy.utils import ebnodb2no
-from sionna.phy.mapping import BinarySource, Mapper, Demapper
+from sionna.phy.mapping import BinarySource
 
 class LDPCEnvironment:
     def __init__(self, k=100, n=200):
@@ -28,18 +27,26 @@ class LDPCEnvironment:
 
     def generate_batch(self, batch_size, ebno_db):
         no = ebnodb2no(ebno_db, num_bits_per_symbol=1, coderate=self.k/self.n)
+        no_val = float(no) # Convert from TF to float
+        sigma = np.sqrt(no_val / 2.0)
+        
+        # 1. Generate bits and encode using Sionna
         source = BinarySource()
         bits = source([batch_size, self.k])
-        codewords = self.encoder(bits)
+        codewords_tf = self.encoder(bits)
         
-        mapper = Mapper("qam", 2)
-        channel = AWGN()
-        demapper = Demapper("app", "qam", 2)
+        # 2. Convert directly to PyTorch
+        codewords = torch.tensor(codewords_tf.numpy(), dtype=torch.float32)
         
-        symbols = mapper(codewords)
-        y = channel([symbols, no])
-        llrs = demapper([y, no])
-        return llrs, codewords, y, no
+        # 3. Pure PyTorch BPSK AWGN Channel
+        symbols = 1.0 - 2.0 * codewords
+        noise = sigma * torch.randn_like(symbols)
+        y = symbols + noise
+        
+        # 4. Calculate LLRs
+        llrs = (2.0 / (sigma**2)) * y
+        
+        return llrs, codewords, y, no_val
 
 class ExternalLDPCEnvironment:
     def __init__(self, filepath):
@@ -87,11 +94,18 @@ class ExternalLDPCEnvironment:
 
     def generate_batch(self, batch_size, ebno_db):
         no = ebnodb2no(ebno_db, num_bits_per_symbol=1, coderate=self.k/self.n)
+        no_val = float(no)
+        sigma = np.sqrt(no_val / 2.0)
+        
+        # Pure PyTorch BPSK Channel on all-zero codeword
         codewords = torch.zeros((batch_size, self.n), dtype=torch.float32)
-        mapper = Mapper("qam", 2) 
-        channel = AWGN()
-        demapper = Demapper("app", "qam", 2)
-        symbols = mapper(codewords)
-        y = channel([symbols, no])
-        llrs = demapper([y, no])
-        return llrs, codewords, y, no
+        symbols = 1.0 - 2.0 * codewords # Maps 0 to +1.0
+        
+        noise = sigma * torch.randn_like(symbols)
+        y = symbols + noise
+        
+        llrs = (2.0 / (sigma**2)) * y
+        
+        return llrs, codewords, y, no_val
+
+

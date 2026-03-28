@@ -8,7 +8,7 @@ if __name__ == "__main__":
     print("1. Initializing Environment (5G LDPC N=200, K=100)...")
     #env = LDPCEnvironment(k=100, n=200)
     # env = ExternalLDPCEnvironment("mackay_96_48.alist") # For RPTU database files
-    env =  ExternalLDPCEnvironment("BCH_63_27.alist")
+    env =  ExternalLDPCEnvironment("codes/BCH_63_27.alist")
     total_nodes = env.num_var_nodes + env.num_check_nodes
     
     print("2. Running Offline Algorithmic Pre-processing (Cycle Detection)...")
@@ -24,12 +24,12 @@ if __name__ == "__main__":
     evaluator = Evaluator(decoder_model, gat_no_cycle_model, baseline_neural, env, cycle_mask)
     
     print("4. Training Models (10 Epochs)...")
-    for epoch in range(10):
+    for epoch in range(1000):
         loss = evaluator.train_step(batch_size=64, ebno_db=2.0)
         print(f"   Epoch {epoch+1:02d} | Loss: {loss:.4f}")
         
     print("5. Evaluating Against Baselines...")
-    snrs_to_test = [1.0, 1.5, 2.0, 2.5, 3.0]
+    snrs_to_test = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 , 4.5, 5.0]
     results = evaluator.evaluate_baselines(test_batches=5, batch_size=100, snr_range=snrs_to_test)
     
     print("6. Generating Publication Graphs...")
