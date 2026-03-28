@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from sionna.fec.ldpc.decoding import LDPCBPDecoder
+from sionna.phy.fec.ldpc.decoding import LDPCBPDecoder
 
 class Evaluator:
     def __init__(self, model, gat_no_cycle_model, baseline_neural_model, environment, cycle_mask):

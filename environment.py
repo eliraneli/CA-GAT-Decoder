@@ -2,10 +2,10 @@ import os
 import torch
 import numpy as np
 import sionna
-from sionna.fec.ldpc import LDPC5GEncoder
-from sionna.channel import AWGN
-from sionna.utils import BinarySource, ebnodb2no
-from sionna.mapping import Mapper, Demapper
+from sionna.phy.fec.ldpc import LDPC5GEncoder
+from sionna.phy.channel import AWGN
+from sionna.phy.utils import ebnodb2no
+from sionna.phy.mapping import BinarySource, Mapper, Demapper
 
 class LDPCEnvironment:
     def __init__(self, k=100, n=200):

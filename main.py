@@ -6,8 +6,9 @@ from plotter import ResultPlotter
 
 if __name__ == "__main__":
     print("1. Initializing Environment (5G LDPC N=200, K=100)...")
-    env = LDPCEnvironment(k=100, n=200)
+    #env = LDPCEnvironment(k=100, n=200)
     # env = ExternalLDPCEnvironment("mackay_96_48.alist") # For RPTU database files
+    env =  ExternalLDPCEnvironment("BCH_63_27.alist")
     total_nodes = env.num_var_nodes + env.num_check_nodes
     
     print("2. Running Offline Algorithmic Pre-processing (Cycle Detection)...")
